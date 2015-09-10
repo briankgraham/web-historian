@@ -16,10 +16,19 @@ exports.handleRequest = function (req, res) {
 
   var uri = url.parse(req.url).pathname;
   if (req.method === 'GET') {
-    if (uri.slice(0, 4) === '/www') { // if request is for API
-      
+    if (uri.slice(0, 4) === '/www') { // if request is for archived website
+      uri = uri.slice(1);
+      archive.isUrlArchived(uri, function(isArchived) {
+        var filename;
+        if (isArchived){
+          filename = path.join(archive.paths.archivedSites, uri);
+        } else {
+          filename = path.join(archive.siteAssets, 'loading.html'); 
+        }
+        fs.createReadStream(filename).pipe(res);
+      });
 
-    } else { // if request is for file
+    } else { // if request is for static file
       var fileName;
       if (uri === '/') {
         fileName = '/index.html';
@@ -28,10 +37,25 @@ exports.handleRequest = function (req, res) {
       }
       httpHelpers.serveAssets(res, fileName);  
     }
-
-
   } else if (req.method === 'POST') {
-    
+    var str = '';
+    req.on('data', function (data) {
+      str+=data;
+    });
+    req.on('end', function () {
+      var url = str.slice(4);
+      archive.isUrlInList(url, function (isInList) {
+        if (!isInList) {
+          archive.addUrlToList(url, function (err) {
+            if (err) {
+              return err;
+            }
+          });
+        }
+      });
+      // res.status(302);
+      // res.end();
+    });
 
   } else if (req.method === 'OPTIONS') {
 
