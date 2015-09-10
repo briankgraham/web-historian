@@ -16,16 +16,9 @@ exports.handleRequest = function (req, res) {
 
   var uri = url.parse(req.url).pathname;
   if (req.method === 'GET') {
-    if (uri.slice(0, 4) === '/www') { // if request is for archived website
-      uri = uri.slice(1);
-      archive.isUrlArchived(uri, function(isArchived) {
-        var filename;
-        if (isArchived){
-          filename = path.join(archive.paths.archivedSites, uri);
-        } else {
-          filename = path.join(archive.siteAssets, 'loading.html'); 
-        }
-        fs.createReadStream(filename).pipe(res);
+    if (httpHelpers.ValidURL(uri.slice(1))) { // if request is for archived website
+      httpHelpers.serveArchives(res, uri, function(err, data){
+        res.end(data);
       });
 
     } else { // if request is for static file
@@ -33,33 +26,34 @@ exports.handleRequest = function (req, res) {
       if (uri === '/') {
         fileName = '/index.html';
       } else {
-        fileName = uri; // www.google.com
+        fileName = uri;
       }
       httpHelpers.serveAssets(res, fileName);  
     }
-  } else if (req.method === 'POST') {
+
+  } else if (req.method === 'POST') { // if request is a form post
     var str = '';
     req.on('data', function (data) {
-      str+=data;
+      str+=data.toString();
     });
     req.on('end', function () {
-      var url = str.slice(4);
+      var url = str.substr(4);
       archive.isUrlInList(url, function (isInList) {
         if (!isInList) {
           archive.addUrlToList(url, function (err) {
             if (err) {
-              return err;
+              console.log(('error writing to file!!').toUpperCase());
             }
           });
         }
       });
-      // res.status(302);
-      // res.end();
+      res.writeHead(302);
+      res.end();
     });
 
   } else if (req.method === 'OPTIONS') {
 
   }
-  
-  // res.end(archive.paths.list);
+      // res.end(archive.paths.list);
 };
+    // 

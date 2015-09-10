@@ -27,7 +27,7 @@ exports.initialize = function(pathsObj) {
 
 exports.readListOfUrls = function(callback) {
   fs.readFile(exports.paths.list, function (err, data) {
-    callback(data.toString().split('\n'));
+    callback(data ? data.toString().split('\n') : []);
   });
 };
 
@@ -38,10 +38,8 @@ exports.isUrlInList = function(url, callback) {
 };
 
 exports.addUrlToList = function(url, callback) {
-  exports.readListOfUrls(function(array) {
-    array.push(url);
-    fs.writeFile(exports.paths.list, array.join('\n'), callback);
-  });
+  console.log(url);
+  fs.appendFile(exports.paths.list, url+'\n', callback);
 };
 
 exports.isUrlArchived = function(url, callback) {

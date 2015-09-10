@@ -34,6 +34,33 @@ exports.serveAssets = function(res, fileName, callback) {
    }); //end path.exists
 };
 
+exports.ValidURL = function (str) {
+  var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  if(!pattern.test(str)) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+exports.serveArchives = function (res, uri, callback) {
+  uri = uri.slice(1);
+  archive.isUrlArchived(uri, function(isArchived) {
+    var filename;
+    if (isArchived){
+      filename = path.join(archive.paths.archivedSites, uri);
+    } else {
+      filename = path.join(archive.paths.siteAssets, 'loading.html'); 
+    }
+    fs.readFile(filename, callback);
+  });
+};
+
   // Write some code here that helps serve up your static files!
   // (Static files are things like html (yours or archived from others...),
   // css, or anything that doesn't change often.)
