@@ -49,7 +49,6 @@ exports.ValidURL = function (str) {
 };
 
 exports.serveArchives = function (res, uri, callback) {
-  uri = uri.slice(1);
   archive.isUrlArchived(uri, function(isArchived) {
     var filename;
     if (isArchived){
